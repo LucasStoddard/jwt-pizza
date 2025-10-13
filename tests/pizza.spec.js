@@ -367,3 +367,4 @@ test('diner open dashboard', async ({ page }) => {
   await expect(page.getByText('diner-dashboard')).toBeVisible();
   await expect(page.getByText('Your pizza kitchen')).toBeVisible();
 });
+
