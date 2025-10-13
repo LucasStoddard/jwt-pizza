@@ -42,7 +42,7 @@ test('admin dashboard list and delete user', async ({ page }) => {
             email: 'testa@jwt.com',
             roles: [{ role: 'admin' }],
         },
-        token: 'mnopqr',
+        token: 'mnopqrs',
         };
         expect(route.request().method()).toBe('PUT');
         expect(route.request().postDataJSON()).toMatchObject(loginReq);
