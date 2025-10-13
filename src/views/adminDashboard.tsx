@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import NotFound from './notFound';
 import Button from '../components/button';
 import { pizzaService } from '../service/service';
-import { Franchise, FranchiseList, Role, Store, User } from '../service/pizzaService';
+import { Franchise, FranchiseList, UserList, Role, Store, User } from '../service/pizzaService';
 import { TrashIcon } from '../icons';
 
 interface Props {
@@ -15,13 +15,18 @@ export default function AdminDashboard(props: Props) {
   const navigate = useNavigate();
   const [franchiseList, setFranchiseList] = React.useState<FranchiseList>({ franchises: [], more: false });
   const [franchisePage, setFranchisePage] = React.useState(0);
+  const [userList, setUserList] = React.useState<UserList>({ users: [], more: false });
+  const [userPage, setUserPage] = React.useState(0);
   const filterFranchiseRef = React.useRef<HTMLInputElement>(null);
+  const filterUserRef = React.useRef<HTMLInputElement>(null);
+
 
   React.useEffect(() => {
     (async () => {
       setFranchiseList(await pizzaService.getFranchises(franchisePage, 3, '*'));
+      setUserList(await pizzaService.listUsers(userPage, 10, '*'));
     })();
-  }, [props.user, franchisePage]);
+  }, [props.user, franchisePage, userPage]);
 
   function createFranchise() {
     navigate('/admin-dashboard/create-franchise');
@@ -37,6 +42,21 @@ export default function AdminDashboard(props: Props) {
 
   async function filterFranchises() {
     setFranchiseList(await pizzaService.getFranchises(franchisePage, 10, `*${filterFranchiseRef.current?.value}*`));
+  }
+
+async function deleteUser(user: User) {
+    try {
+        await pizzaService.deleteUser(user);
+        setUserPage(0); 
+        alert(`${user.name} has been deleted.`);
+    } catch (error) {
+        console.error('Failed to delete user:', error);
+        alert('Failed to delete user. Check the console for details.');
+    }
+}
+
+  async function filterUsers() {
+    setUserList(await pizzaService.listUsers(userPage, 10, `*${filterUserRef.current?.value}*`));
   }
 
   let response = <NotFound />;
@@ -119,9 +139,98 @@ export default function AdminDashboard(props: Props) {
               </div>
             </div>
           </div>
-        </div>
-        <div>
-          <Button className="w-36 text-xs sm:text-sm sm:w-64" title="Add Franchise" onPress={createFranchise} />
+          <div>
+            <Button className="w-36 text-xs sm:text-sm sm:w-64" title="Add Franchise" onPress={createFranchise} />
+          </div>
+          <h3 className="text-neutral-100 text-xl">Users</h3>
+          <div className="bg-neutral-100 overflow-clip my-4 border border-gray-300">
+            <div className="flex flex-col">
+              <div className="-m-1.5 overflow-x-auto">
+                <div className="p-1.5 min-w-full inline-block align-middle">
+                  <div className="overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="text-gray-800 bg-white border-b border-gray-200">
+                        <tr>
+                          {['Name', 'Email', 'Role', 'Action'].map((header) => (
+                            <th 
+                              key={header} 
+                              scope="col" 
+                              className={`px-3 py-3 text-sm font-bold text-start ${header === 'Action' ? 'w-10' : ''}`}
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {userList.users.map((user) => (
+                          <tr key={user.id} className="bg-white hover:bg-neutral-50">
+                            <td className="text-start px-3 py-1.5 whitespace-nowrap text-sm font-normal text-gray-800">
+                              {user.name}
+                            </td>
+                            <td className="text-start px-3 py-1.5 whitespace-nowrap text-sm font-normal text-gray-800">
+                              {user.email}
+                            </td>
+                            <td className="text-start px-3 py-1.5 whitespace-nowrap text-sm font-normal text-gray-800">
+                              {user.roles && user.roles.length > 0 ? user.roles[0].role : 'No Role'}
+                            </td>
+                            <td className="px-3 py-1.5 whitespace-nowrap text-sm font-medium text-center w-10">
+                              <button 
+                                type="button" 
+                                className="text-red-500 hover:text-red-700 font-bold text-lg leading-none"
+                                aria-label={`Delete user ${user.name}`}  
+                                onClick={() => deleteUser(user)}
+                              >
+                                &times;
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="border-t border-gray-200 bg-white">
+                        <tr>
+                          <td className="px-3 py-2" colSpan={2}>
+                            <input 
+                              type="text" 
+                              ref={filterUserRef} 
+                              name="filterUser" 
+                              placeholder="Name" 
+                              className="px-2 py-1 text-sm border border-gray-300 rounded-lg w-full" 
+                            />
+                          </td>
+                          <td className="px-3 py-2" colSpan={1}>
+                            <button 
+                              type="button" 
+                              className="w-full py-1 text-sm font-semibold rounded-lg border border-gray-400 text-gray-600 hover:bg-gray-100" 
+                              onClick={filterUsers}
+                            >
+                              Search
+                            </button>
+                          </td>
+                          <td className="px-3 py-2 text-end" colSpan={1}>
+                            <button 
+                              className="w-10 p-1 text-sm font-semibold rounded-lg border border-gray-300 bg-white m-0.5 hover:bg-gray-100 disabled:bg-neutral-300" 
+                              onClick={() => setUserPage(userPage - 1)} 
+                              disabled={userPage <= 0}
+                            >
+                              Prev
+                            </button>
+                            <button 
+                              className="w-10 p-1 text-sm font-semibold rounded-lg border border-gray-300 bg-white m-0.5 hover:bg-gray-100 disabled:bg-neutral-300" 
+                              onClick={() => setUserPage(userPage + 1)} 
+                              disabled={!userList.more}
+                            >
+                              Next
+                            </button>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </View>
     );
