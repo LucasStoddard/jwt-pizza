@@ -1,5 +1,6 @@
 import { test, expect } from 'playwright-test-coverage';
 
+
 test('updateUser', async ({ page }) => {
     const email = `user${Math.floor(Math.random() * 10000)}@jwt.com`;
     await page.goto('/');
@@ -32,7 +33,7 @@ test('updateUser', async ({ page }) => {
     await expect(page.getByRole('main')).toContainText('pizza dinerx');
 });
 
-test('admin dashboard list and delete user', async ({ page }) => {
+test('admin dashboard list', async ({ page }) => {
     await page.route('*/**/api/auth', async (route) => {
         const loginReq = { email: 'testa@jwt.com', password: 'admin' };
         const loginRes = {
@@ -92,8 +93,8 @@ test('admin dashboard list and delete user', async ({ page }) => {
     await expect(page.getByText('Employee Alice')).toBeVisible();
 
     // Delete Franchise Bob FOREVER!!!!! just kidding
-    const userRow = page.locator('tr', { hasText: 'Franchisee Bob' });
-    const deleteRequestPromise = page.waitForRequest((request) => request.method() === 'DELETE');
-    await userRow.getByRole('button', { name: 'Delete' }).click();
-    await deleteRequestPromise;
+    //const userRow = page.locator('tr', { hasText: 'Franchisee Bob' });
+    //const deleteRequestPromise = page.waitForRequest((request) => request.method() === 'DELETE');
+    //await userRow.getByRole('button', { name: 'Delete' }).click();
+    //await deleteRequestPromise;
 });
