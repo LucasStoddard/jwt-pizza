@@ -227,6 +227,11 @@ test('admin dashboard create and delete franchise', async ({ page }) => {
     await route.fulfill({ json: { message: 'franchise deleted' } });
   });
 
+  await page.route('**/api/store/4', async (route) => {
+    expect(route.request().method()).toBe('DELETE');
+    await route.fulfill({ status: 200, json: { message: 'store deleted' } });
+  });
+
   // Login as admin and go to admin dashboard
   await page.goto('/');
   await page.getByRole('link', { name: 'Login' }).click();
@@ -246,6 +251,13 @@ test('admin dashboard create and delete franchise', async ({ page }) => {
   await page.getByRole('textbox', { name: 'franchisee admin email' }).fill('testa@jwt.com');
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('link', { name: 'Admin', exact: true }).click();
+
+  // Almost delete one of the new stores
+  await expect(page.getByText('Lehi')).toBeVisible();
+  await page.getByRole('row', { name: 'Lehi' }).getByRole('button', { name: 'Close' }).click();
+  await expect(page.getByText('Are you sure you want to close the newFranchise store Lehi')).toBeVisible();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByText('Are you sure you want to close the newFranchise store Lehi')).not.toBeVisible();
 
   // Delete the new franchise
   await expect(page.getByText('newFranchise')).toBeVisible();

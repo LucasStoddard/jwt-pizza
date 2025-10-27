@@ -141,9 +141,20 @@ test('admin dashboard list', async ({ page }) => {
     // ahhh I need to mock this as well
     await page.route(/\/api\/franchise/, async (route) => {
         if (route.request().method() === 'GET') {
-            // Return minimal mock data for the test to proceed past the useEffect
             const mockFranchiseList = {
-                franchises: [], // Don't need real franchise data for the 'Franchisee Bob' test
+                    franchises: [
+                    {
+                        id: 2,
+                        name: 'LotaPizza',
+                        stores: [
+                            { id: 4, name: 'Lehi' },
+                            { id: 5, name: 'Springville' },
+                            { id: 6, name: 'American Fork' },
+                        ],
+                    },
+                    { id: 3, name: 'PizzaCorp', stores: [{ id: 7, name: 'Spanish Fork' }] },
+                    { id: 4, name: 'topSpot', stores: [] },
+                ], // Don't need real franchise data for the 'Franchisee Bob' test
                 more: false,
             };
             await route.fulfill({ json: mockFranchiseList, status: 200 });
@@ -168,4 +179,13 @@ test('admin dashboard list', async ({ page }) => {
     const deleteRequestPromise = page.waitForRequest((request) => request.method() === 'DELETE');
     await userRow.getByRole('button', { name: 'Delete' }).click();
     await deleteRequestPromise;
+
+    // Search Tests
+    const searchText = "randomInvalidSearch"
+    const franchiseInput = page.getByPlaceholder('Filter franchises');
+    await franchiseInput.fill(searchText);
+    await page.getByRole('button', { name: 'Submit' }).click();
+    const userInput = page.getByPlaceholder('Name', { exact: true });
+    await userInput.fill(searchText);
+    await page.getByRole('button', { name: 'Search' }).click();
 });
